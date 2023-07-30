@@ -1,16 +1,27 @@
-# Load the necessary libraries
 import streamlit as st
 from dotenv import load_dotenv
-from streamlit.components import HTML, Button, Text
-from streamlit.directives import download
+from PyPDF2 import PdfReader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.chat_models import ChatOpenAI
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationalRetrievalChain
+from htmlTemplates import css, bot_template, user_template
+from langchain.llms import HuggingFaceHub
+import os
 
-# Load the environment variables
-load_dotenv()
+def get_pdf_text(pdf_docs):
+    text = ""
+    # loop through all pdfs
+    for pdf in pdf_docs:
+        pdf_reader = PdfReader(pdf)
+        # loop through all pages
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+    return text
 
-# Set up the Streamlit app
-st.set_page_config(page_title="Ask Manyu", page_icon=":books:")
 
-# Define the functions to get the text chunks and vector store
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
         separator="\n",
@@ -18,34 +29,32 @@ def get_text_chunks(text):
         chunk_overlap=200,
         length_function=len
     )
-    chunks = text_splitter.split_text(text)  # return as a list
+    chunks = text_splitter.split_text(text) # return as a list
     return chunks
 
-def get_vector_store(text_chunks):
-    embeddings = OpenAIEmbeddings()
-    # Use Instructor Embedding model
-    # embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
-    vector_store = FAISS.from_texts(
-        texts=text_chunks,
-        embedding=embeddings
-    )
-    return vector_store
 
-# Define the function to get the conversation chain
-def get_conversation_chain(vector_store):
+def get_vectorstore(text_chunks):
+    embeddings = OpenAIEmbeddings()
+    # use Instructor Embedding model
+    # embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
+    vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
+    return vectorstore
+
+
+def get_conversation_chain(vectorstore):
     llm = ChatOpenAI()
-    # llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature": 0.5, "max_length": 512})
+    # llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})
+
     memory = ConversationBufferMemory(
-        memory_key="chat_history", return_messages=True
-    )
+        memory_key='chat_history', return_messages=True)
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
-        retriever=vector_store.as_retriever(),
+        retriever=vectorstore.as_retriever(),
         memory=memory
     )
     return conversation_chain
 
-# Define the handler for user input
+
 def handle_userinput(user_question):
     response = st.session_state.conversation({'question': user_question})
     st.session_state.chat_history = response['chat_history']
@@ -53,38 +62,68 @@ def handle_userinput(user_question):
     for i, message in enumerate(st.session_state.chat_history):
         if i % 2 == 0:
             st.write(user_template.replace(
-                "{{MSG}}", message.content
-            ), unsafe_allow_html=True)
+                "{{MSG}}", message.content), unsafe_allow_html=True)
         else:
             st.write(bot_template.replace(
-                "{{MSG}}", message.content
-            ), unsafe_allow_html=True)
+                "{{MSG}}", message.content), unsafe_allow_html=True)
 
-# Define the main function
+
 def main():
-    # Load the environment variables
     load_dotenv()
-
-    # Set up the Streamlit app
-    st.set_page_config(page_title="Ask Manyu", page_icon=":books:")
+    st.set_page_config(page_title="Ask Manyu",
+                       page_icon=":books:")
     st.write(css, unsafe_allow_html=True)
 
-    # Upload the PDF file
-    pdf_file = st.file_uploader("Choose a PDF file", accept_multiple=True)
+    # initialize the conversation and history every time
+    if "conversation" not in st.session_state:
+        st.session_state.conversation = None
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = None
 
-    # Extract the text from the uploaded PDF file
-    text = extract_text_from_pdf(pdf_file)
+    st.header("Ask Manyu anything about your PDFs :books:")
+    st.write("👋 Hello! Welcome to ***Ask Manyu***, an AI application created by **Manyu Zhang**, an AI Engineer.")
+    st.write("I was built with technologies such as OpenAI API, LangChain, Streamlit, and more. And I'm here to assist you with any questions you have about your PDF documents.")
+    st.write("If you have any questions or need assistance, don't hesitate to ask. Enjoy your experience with Ask Manyu!")
+    st.markdown("---")
 
-    # Split the text into chunks
-    text_chunks = split_text_into_chunks(text, chunk_size=1000)
+    user_question = st.text_input("Ask a question about your documents:")
+    if user_question:
+        handle_userinput(user_question)
 
-    # Create the vector store
-    vector_store = get_vector_store(text_chunks)
+    # design the sidebar
+    with st.sidebar:
+        st.subheader("Your PDF documents")
+        # allow user to upload multiple pdf files, return a list of pdfs
+        pdf_docs = st.file_uploader("Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
+        
+        if st.button("Process"):
+            # add a spinner to show the processing status
+            with st.spinner("Processing"):
+                # 1. get the pdf texts
+                raw_text = get_pdf_text(pdf_docs)
 
-    # Generate the conversation chain
-    conversation_chain = get_conversation_chain(vector_store)
+                # 2. split the texts into chunks
+                text_chunks = get_text_chunks(raw_text)
 
-    # Display the conversation chain
-    st.write(conversation_chain, unsafe_allow_html=True)
+                # 3. create vector store with embeddings
+                vectorstore = get_vectorstore(text_chunks)
 
-main()
+                # 4. create conversation chain object
+                # use session_state to ensure conversation persistency, we can call the conversations outside of the process part
+                st.session_state.conversation = get_conversation_chain(vectorstore)
+    
+    # Add a separator line
+        st.markdown("---")
+
+    # Add the contact information in the sidebar
+    with st.sidebar:
+        st.subheader("Contact Me")
+        st.write("📧 Email: zhangmanyuzmy@gmail.com")
+        st.write("🐙 GitHub: [Manyu Zhang's GitHub](https://github.com/manyuzhang1996)")
+
+
+if __name__ == '__main__':
+    main()
+
+openai.api_key = os.environ.get("OPENAI_API_KEY")
+openai.api_key = "TU_CLAVE_DE_API_AQUI"
