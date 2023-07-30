@@ -70,8 +70,6 @@ def main():
     st.write(css, unsafe_allow_html=True)
 
     # Upload the PDF file
-    pdf_file = st.file_uploader("Choose a PDF file", accept_ Multiple=True)
-    # Upload the PDF file
     pdf_file = st.file_uploader("Choose a PDF file", accept_multiple=True)
 
     # Extract the text from the uploaded PDF file
