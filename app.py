@@ -11,6 +11,7 @@ from htmlTemplates import css, bot_template, user_template
 from langchain.llms import HuggingFaceHub
 import tiktoken as tiktoken
 import os
+import openai
 
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
