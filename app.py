@@ -54,10 +54,17 @@ def get_conversation_chain(vectorstore):
     return conversation_chain
 
 
-def handle_userinput(user_question):
-    response = st.session_state.conversation['question']
 
+
+def handle_userinput(user_question):
+    # Obtener la respuesta del chatbot
+    response = st.session_state.conversation
+
+    # Obtener el historial de chat
     st.session_state.chat_history = response['chat_history']
+
+
+
 
     for i, message in enumerate(st.session_state.chat_history):
         if i % 2 == 0:
