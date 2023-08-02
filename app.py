@@ -91,9 +91,10 @@ def main():
     st.markdown("---")
 
     user_question = st.text_input("Ask a question about your documents:")
+    if st.button("Send"):
     if user_question:
         handle_userinput(user_question)
-
+   
     # design the sidebar
     with st.sidebar:
         st.subheader("Your PDF documents")
