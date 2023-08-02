@@ -54,10 +54,10 @@ def get_conversation_chain(vectorstore):
     return conversation_chain
 
 
-
-
 def handle_userinput(user_question):
-    # Obtener la respuesta del chatbot
+    # Get the chatbot response
+    response = st.session_state.conversation
+    print(response) # print statement for debugging
     response = st.session_state.conversation
 
     # Obtener el historial de chat
