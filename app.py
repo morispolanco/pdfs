@@ -9,8 +9,6 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 from langchain.llms import HuggingFaceHub
-import os
-import openai
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -119,12 +117,10 @@ def main():
     # Add the contact information in the sidebar
     with st.sidebar:
         st.subheader("Contact Me")
+        st.write("🔗 LinkedIn: [Manyu Zhang's LinkedIn](https://www.linkedin.com/in/manyu-zhang-b98457186/)")
         st.write("📧 Email: zhangmanyuzmy@gmail.com")
         st.write("🐙 GitHub: [Manyu Zhang's GitHub](https://github.com/manyuzhang1996)")
-
+        
 
 if __name__ == '__main__':
     main()
-
-openai.api_key = os.environ.get("OPENAI_API_KEY")
-openai.api_key = "TU_CLAVE_DE_API_AQUI"
