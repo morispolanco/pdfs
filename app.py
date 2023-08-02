@@ -92,8 +92,8 @@ def main():
 
     user_question = st.text_input("Ask a question about your documents:")
     if st.button("Send"):
-    if user_question:
-        handle_userinput(user_question)
+        if user_question:
+            handle_userinput(user_question)
    
     # design the sidebar
     with st.sidebar:
