@@ -66,11 +66,13 @@ def handle_userinput(user_question):
             st.write(bot_template.replace(
                 "{{MSG}}", message.content), unsafe_allow_html=True)
 
-
 def main():
     load_dotenv()
-    st.set_page_config(page_title="Ask Manyu",
-                       page_icon=":books:")
+    st.set_page_config(page_title="Ask Manyu", page_icon=":books:")
+
+    # Inicializar el objeto "conversation" si no está en el estado de sesión
+    if "conversation" not in st.session_state:
+        st.session_state.conversation = None
     st.write(css, unsafe_allow_html=True)
 
     # initialize the conversation and history every time
