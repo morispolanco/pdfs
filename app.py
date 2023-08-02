@@ -60,12 +60,7 @@ def handle_userinput(user_question):
     print(response) # print statement for debugging
     response = st.session_state.conversation
 
-    # Obtener el historial de chat
-    st.session_state.chat_history = response['chat_history']
-
-
-
-
+   
     for i, message in enumerate(st.session_state.chat_history):
         if i % 2 == 0:
             st.write(user_template.replace(
