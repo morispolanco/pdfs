@@ -73,7 +73,9 @@ def main():
 
     # Inicializar el objeto "conversation" si no está en el estado de sesión
     if "conversation" not in st.session_state:
-        st.session_state.conversation = None
+        st.session_state.conversation = {}
+
+    # ... El resto del código ...
     st.write(css, unsafe_allow_html=True)
 
     # initialize the conversation and history every time
