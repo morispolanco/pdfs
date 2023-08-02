@@ -5,4 +5,4 @@ langchain
 pandas
 openai
 tiktoken 
-faiss-gpu
+faiss-cpu
