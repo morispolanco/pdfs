@@ -56,7 +56,7 @@ def get_conversation_chain(vectorstore):
 
 def handle_userinput(user_question):
     # Get the chatbot response
-    
+    response = st.session_state.conversation
     print(response)  # print statement for debugging
 
     if st.session_state.chat_history is not None:
